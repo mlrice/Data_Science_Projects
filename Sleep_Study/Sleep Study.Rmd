@@ -1,0 +1,168 @@
+---
+title: "Sleep Study"
+author: "Michelle Rice"
+date: "2/25/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Project Summary
+```
+I found this sleep dataset interesting for a number of reasons.  As someone who has dealth with insomnia in the past and now sometimes does not get enough sleep due to overloaded schedules, family commitments, etc., I often feel tired.  It also seems as though many others in the workplace, social circles, etc, often mention being tired.  We hear that the goal for sleep is 8 hours, but some people seem to function just fine on much less while others can get 8 hours of sleep and still complain of being tired.  As the old adage goes, "everyone is different." So, I wouldn't expect everyone to have the same needs or experience, but I was curious to see if there was a strong correlation that could be found to other factors causing us to still feel tired.
+
+The problem statement addressed is, how much sleep is enough (and what does "enough" really mean) and what factors might contribute to feeling tired or not feeling you got enough sleep.
+
+
+Methodologies I used include creating scatterplots of data to identify any visual trends and correlatons, using linear regression for my continuous variables and logistic regression for categorical variables.  
+
+One interesting insight that I saw right away in the data was that the correlation between hours of sleep and feeling tired was not as linear as I would have expected. 
+
+A challenge that I faced was using different variable types and knowing if I am modeling correclty based on the type of data that I have.  I was surprised by my findings that breakfast had a stronger correlation to feeling of tiredness than hours of sleep, but I'm also not completely sure that I did this correctly due to it being a nominal variable. 
+
+I feel that I could continue with this analysis and look more closely at the "enough" variable to see if there are trends there that might help with the analysis.  One problem with this dataset is that the two variables that I was trying to predict, enough and tiredness rating, are based on personal feeling, so two people could have all other variables equal but one person still rates themself as more tired or not getting enough sleep.  Or a level 3 tiredness rating could mean different things to different people.  But I still think it might be valuable to dig into it more and see if there is a common expectation of "enough."
+```
+
+## Import Dataset
+```{r echo = FALSE}
+library (foreign)
+library(caTools)
+setwd("/Users/mrice/DSC520_Rice/dsc520/")
+
+sleepStudy <- read.csv("SleepStudyData.csv")
+head(sleepStudy)
+summary(sleepStudy)
+```
+
+
+```{r echo = FALSE}
+#change dichotomous variables from Yes/No to 0/1
+sleepStudy$PhoneTime[sleepStudy$PhoneTime == "Yes"] <- 1
+sleepStudy$PhoneTime[sleepStudy$PhoneTime == "No"] <- 0
+sleepStudy$PhoneReach[sleepStudy$PhoneReach == "Yes"] <- 1
+sleepStudy$PhoneReach[sleepStudy$PhoneReach == "No"] <- 0
+sleepStudy$Breakfast[sleepStudy$Breakfast == "Yes"] <- 1
+sleepStudy$Breakfast[sleepStudy$Breakfast == "No"] <- 0
+sleepStudy$Enough[sleepStudy$Enough == "Yes"] <- 1
+sleepStudy$Enough[sleepStudy$Enough == "No"] <- 0
+
+
+```
+
+In order to work with the categorical variables, I converted yes/no responses to 0/1.  I then created a linear regression model with tired rating as the dependent variable and hours as the predictor
+The p-value is .053 which is generally considered a significant predictor:
+
+
+```{r echo = FALSE}
+tiredFactor<-lm(sleepStudy$Tired ~ sleepStudy$Hours, data=sleepStudy)
+
+summary(tiredFactor)
+
+```
+
+For a visual of the relationship, I plotted hours against tiredness rating.  Since the scatter plot was difficult to see any trends, I used the jitter function and also smooth to better show the linear relationship between the variables.  This was not quite as linear as I expected.
+
+```{r echo=FALSE}
+defaultW <- getOption("warn") 
+
+options(warn = -1)
+
+library(ggplot2)
+
+ggplot(data = sleepStudy, aes(y = Hours, x = Tired))  + geom_jitter() + labs(title="Hours of Sleep vs. Tiredness Rating", x = "Tired Rating", y = "Hours of Sleep")
+
+ggplot(data = sleepStudy, aes(y = Hours, x = Tired)) + geom_smooth() + labs(title="Hours of Sleep vs. Tiredness Rating", x = "Tired Rating", y = "Hours of Sleep")
+```
+
+I then plotted a histogram of the total hours of sleep reported just to see what the distribution looked like.  Overall the distribution looks normal but we can see a clear outlier on the lower end with less than 2.5 hours of sleep and an outlier at the other end with 10 hours, although this does not appear to be as far outside the distribution.  The data appears to be slightly left skewed with more data at about 7 hours and less.
+
+```{r echo = FALSE}
+ggplot(data = sleepStudy, aes(x=Hours)) + geom_histogram() + labs (title = "Total Hours of sleep")
+```
+
+I also plotted a histogram of the responses for "enough" sleep, color coding the yes and no responses to see them comparitively.
+
+```{r echo = FALSE}
+ggplot(data = sleepStudy, aes(x=Hours, color = Enough)) + geom_histogram()
+
+```
+
+Next I created a logistic regression model with tired as the dependent variable and hours, breakfast, phone in reach and phone time before bed as predictor variables. As expected, hours of sleep was a very strong predictor of enough sleep, as was tiredness rating, both having p-values near 0.  The other three variables all had p-values of .6 or higher, indicating that while there might be some relationship, these are not significant predictors of someone reporting enough sleep.
+
+```{r echo=FALSE}
+library(caTools)
+library(foreign)
+enoughTest <- glm(as.factor(Enough) ~ Hours + Tired + Breakfast + PhoneReach + PhoneTime, data = sleepStudy, family = binomial())
+
+summary(enoughTest)
+
+```
+
+I will now split the data to create a train model and run it on the test set to see how accurate it is.  Create train and test data by splitting the datasest:
+
+```{r echo = FALSE}
+split <- sample.split(sleepStudy, SplitRatio = 0.8)
+split
+
+trainData <- subset(sleepStudy, split == "TRUE")
+summary(trainData)
+
+testData <- subset(sleepStudy, split == "FALSE")
+summary(testData)
+```
+
+
+# Create the train model:
+
+```{r echo = FALSE}
+split_model <- glm (as.factor(Enough) ~ Hours + Tired + Breakfast + PhoneReach + PhoneTime, data = trainData, family = binomial())
+                  
+summary(split_model)
+```
+
+# Summary of test model and train model
+```{r echo = FALSE}
+library(caTools)
+library(foreign)
+res <- predict(split_model,testData, type="response")
+summary(res)
+res <- predict(split_model,trainData,type="response")
+summary(res)
+```
+
+# Validate the Model - Confusion Matrix
+```{r echo = FALSE}
+confmatrix <- table(Actual_Value=trainData$Enough, Predicted_value = res > 0.5)
+confmatrix
+```
+
+# Calculate Accuracy
+```{r echo = FALSE}
+
+(confmatrix[[1,1]] + confmatrix[[2,2]])/sum(confmatrix)
+```
+The test model is 81% accurate in predicting if a person reports feeling rested enough.
+
+Since the dataset includes a response of rested enough and a tiredness level, which give us similar information, I wanted to look at both.  I created a logistic regression model to predict tiredness level by using hours, breakfast, phone in reach, and phone time:
+```{r echo = FALSE}
+library(caTools)
+library(foreign)
+predictTired <- glm (Tired ~ Hours + + Breakfast + PhoneReach + PhoneTime, data = sleepStudy)
+
+summary(predictTired)
+```
+
+In my initial linear model with hours and tiredness rating, the p-value for hours was .05, very significant.  Now, when we have added other variables, the p-value for hours is only .143 and breakfast appears to have the most significant value with a p-value of .015.  Since the phone variables are less significant, I removed those and ran the model again with only hours and breakfast.
+
+```{r echo = FALSE}
+library(caTools)
+library(foreign)
+predictTired <- lm (Tired ~ Breakfast, data = sleepStudy)
+
+summary(predictTired)
+```
+The p-value for breakfast predicting tiredness level was .013, which would make eating breakfast a stronger predictor of tiredness leven than hours of sleep.
+
+# Conclusions
+Based on this analysis, it appears that both hours of sleep and eating breakfast have a strong correlation to tiredness level, which has a strong correlation to feeling of getting enough sleep.  The variables regarding phone use did not appear to have a significant correlation.
