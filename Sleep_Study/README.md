@@ -19,4 +19,4 @@ Time on phone before bed
 
 ### Data Source
 https://www.kaggle.com/mlomuscio/sleepstudypilot
-![image](https://user-images.githubusercontent.com/36652677/141829554-5d47a6ab-fe02-4605-bb43-803c7c1cf23e.png)
+
