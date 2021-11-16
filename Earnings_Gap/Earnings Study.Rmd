@@ -1,0 +1,150 @@
+---
+title: "1.2 R Refresher Michelle Rice"
+author: "Michelle Rice"
+date: "6/10/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Summary
+
+```
+For this study, I used the Bureau of Labor Statistics data on earnings of women and men.  I will look at the wage gap to see how large the gap is, how it has changed over time, and how it differs among different ethnic groups.
+```
+```{r echo = FALSE}
+library (foreign)
+library(caTools)
+#install.packages("readxl")
+library(readxl)
+setwd("/Users/mrice/DSC630")
+
+earningsStudy <- read_excel("womens-earnings-tables-2019-backup.xlsx", sheet = "Table 26")
+knitr::kable(head(earningsStudy[, 1:7]), "pipe")
+```
+```
+From the original data set, I have created three separate datasets, one for men, one for women and one for total subjects.
+
+
+```
+
+```{r echo = TRUE}
+# Create separate datasets
+
+    men <- subset(earningsStudy, Group == 'M')
+    women <- subset(earningsStudy, Group == 'W')
+    total <- subset(earningsStudy, Group == 'T')
+
+# Show summary statistics of each
+ knitr::kable(summary(men[, 1:7]), "pipe")
+ knitr::kable(summary(women[, 1:7]), "pipe")
+ knitr::kable(summary(total[, 1:7]), "pipe")
+
+```
+
+```
+The first plot that I will look at is a scatter plot with a different color representing the average wage each year for the three groups, men, women and total.
+
+```
+
+
+```{r echo = TRUE}
+library(ggplot2)
+
+ggplot(data = earningsStudy, aes(y = Total, x = Year, color=Group))  + geom_jitter() + labs(title="Average wage per year", x = "Year", y = "Average wage") +theme(axis.text.x = element_text(angle = 90))
+
+
+
+
+```
+```
+The scatter plot shows very clearly that men's wages were consistently higher than women.  It also shows a very clear increase over time between all three groups indicating that wages rose consistently over time at about the same rate.  I will also look at a boxplot of those same three categories.
+
+```
+
+
+```{r echo = TRUE}
+library(ggplot2)
+
+ggplot(data = earningsStudy, aes(y = Total, x = Group))  + geom_boxplot() + labs(title="Average wage by group", x = "Group", y = "Average wage")
+
+
+```
+```
+Again, the boxplot clearly shows a higher average wage for men. The distribution appears to be about equal for each group with men showing just a slightly higher distribution above the mean, indicating that there are more men that are high earners compared to other men, while women's wages are more evenly distributed.
+
+
+Now, in order to look at how the gap might differ based on ethnic group, I will calculate the gap between each subset of women - white, black and hispanic (I did not include Asian since there was a lot of missing date for that group) compared to the average of all men.  I then created a new dataset that has a coloumn for the wage gap in each of those groups.  Below is the summary of that dataset:
+
+
+```
+
+
+```{r echo = TRUE}
+# Create variables to use to calculate and plot the wage gap
+year <- women$Year
+totalMen <- men$Total
+totalWomen <- women$Total
+whiteWomen <- women$'Total White'
+blackWomen <- women$'Total Black or African American'
+hispanicWomen <- women$'Total Hispanic or Latino ethnicity'
+
+gap <- totalMen - totalWomen
+gapWhite <- totalMen-whiteWomen
+gapBlack <- totalMen-blackWomen
+gapHispanic <- totalMen - hispanicWomen
+
+# Create a new dataframe for the wage gap information
+earningsGap <- data.frame(year, men, women, gap, gapWhite, gapBlack, gapHispanic)
+
+# Show summary stats of the new dataset
+knitr::kable(summary(earningsGap[, 1:10]), "pipe")
+```
+```
+First I will look at a line graph of the gap between total men and women over time:
+
+```
+
+```{r echo = TRUE}
+library (ggplot2)
+ggplot(data = earningsGap, aes(year, gap, group = 1))  + geom_line() + labs(title="Wage gap between men and women by year", x = "Gap", y = "Year") + theme(axis.text.x = element_text(angle = 90))
+```
+```
+The graph shows us that the gap went down in the late 80's and early 90's but then had perios of increaseing and decreasing throughout the 90's and early 2000's.  The gap hit a relatively high point around 2014, but then had it's lowest point in 2017.
+
+Next I will look at this same plot with the women divided into ethnic groups:
+```
+```{r echo = TRUE}
+ggplot() + geom_line(data = earningsGap, aes(year, gapWhite, group = 1, color = 'White')) + geom_line(data = earningsGap, aes(year, gapBlack, group = 3, color = 'Black')) + geom_line(data = earningsGap, aes(year, gapHispanic, group = 4, color = 'Hispanic')) + labs(title="Gender wage gap by ethnic group", x = "Year", y = "Gap") + theme(axis.text.x = element_text(angle = 90))
+
+
+
+```
+
+```
+This graph is interesting as it shows that the wage gap for white women has had some significant decreases while the gap for black and hispanic women has actually had larger increases, especially hispanic women. 
+```
+
+```{r echo = TRUE}
+# Save dataframes to csv
+
+write.csv(earningsStudy,"all_earnings.csv") 
+write.csv(men,"men_earnings.csv") 
+write.csv(women,"women_earnings.csv") 
+write.csv(total,"total_earnings.csv") 
+write.csv(earningsGap,"earnings_gap.csv") 
+```
+# Summary of findings
+```
+From this data we can see a couple of different things:
+
+As a whole, wages for both men and women have risen, and we can see a linear relationship between years and wage increase.
+
+Average wages for women have remained consistently lower than men, but there have been minor fluctuations in that gap that we can not explain with this data alone.  It would be interesting to study employment trends in these years to see if there is a correlation with other things happening in the workforce.
+
+The wage gap seems to have improved slightly for white women, while getting worse for black and hispanic women.  Again, this would be interesting to study other employement trends to see if there are any other factors that we could relate to this.
+
+Looking at the summary statistics for both men and women, we can see that the mean and max wages are higher for white individuals than other races, however, this gap is slightly larger for white men.
+```
