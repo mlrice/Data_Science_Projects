@@ -1,0 +1,121 @@
+---
+title: "Effect of income level on Educational Achievement"
+author: "Michelle Rice"
+date: "9/13/2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Project Summary
+```
+
+```
+
+## Import Dataset
+```{r echo = FALSE}
+library (foreign)
+library(caTools)
+library(readxl)
+setwd("/Users/mrice/DSC680/Project 1/")
+
+population <- read_excel("population.xlsx")
+head(population)
+summary(population)
+
+income <- read_excel("income.xlsx")
+head(income)
+summary(income)
+
+county <- read_excel("county classifications.xlsx")
+head(county)
+
+popInc <- merge(population,income,by=c("County"))
+popCounty <- merge(population, county, by=c("County"))
+popIncCounty <- merge(popInc, popCounty, by=c("County"))
+
+head(popInc)
+head(popCounty)
+head(popIncCounty)
+```
+
+
+```{r echo=FALSE}
+defaultW <- getOption("warn") 
+
+options(warn = -1)
+
+library(ggplot2)
+library("scales")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed5CollegePlusPct))  + geom_jitter() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with College")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed5CollegePlusPct)) + geom_smooth() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with College")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed2HSDiplomaOnlyPct))  + geom_jitter() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with College")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed2HSDiplomaOnlyPct)) + geom_smooth() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with College")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed1LessThanHSPct...10))  + geom_jitter() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with Less than High School")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed1LessThanHSPct...10)) + geom_smooth() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with Less than HS")
+
+ggplot(data = popInc, aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed1LessThanHSPct...10)) + geom_smooth() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with Less than HS")
+
+ggplot(data = popInc, aes(Income, edLevel)) + scale_x_continuous(labels = comma) +
+     geom_smooth(aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed1LessThanHSPct...10 , colour="Less Than High School" )) +
+     geom_smooth(aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed2HSDiplomaOnlyPct, colour="High School Only")) +
+    geom_smooth(aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed5CollegePlusPct, colour ="College and Above"))+
+    geom_smooth(aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed3SomeCollegePct, colour="Some College"))+
+    geom_smooth(aes(x = popInc$Median_HH_Inc_ACS, y = popInc$Ed4AssocDegreePct , colour="Associate Degree")) + labs(title = "Education Level by Income", x = "Income", y = "Education Level") +
+ scale_color_manual(name="Ed Level", 
+                        
+                        values = c( "Less Than High School" = "red", 
+                                   "High School Only"= "blue", 
+                                   "College and Above"= "black", 
+                                   "Some College" = "green", 
+                                   "Associate Degree" = "yellow"))
+
+
+ggplot(data = popCounty, aes(x = popCounty$RuralUrbanContinuumCode2013, y = popCounty$Ed5CollegePlusPct)) + geom_point() + labs(title="College vs. Income Level", x = "Income Level", y = "Percent of Pop with College")
+
+
+```
+
+
+```{r echo = FALSE}
+lessHS<-lm(popInc$Ed1LessThanHSPct...10 ~ popInc$MedHHIncTenThou, data=popInc)
+summary(lessHS)
+
+highSchool<-lm(popInc$Ed2HSDiplomaOnlyPct ~ popInc$MedHHIncTenThou, data=popInc)
+summary(highSchool)
+
+someCollege<-lm(popInc$Ed3SomeCollegePct ~ popInc$MedHHIncTenThou, data=popInc)
+summary(someCollege)
+
+assocDegree<-lm(popInc$Ed4AssocDegreePct ~ popInc$MedHHIncTenThou, data=popInc)
+summary(assocDegree)
+
+collegePlus<-lm(popInc$Ed5CollegePlusPct ~ popInc$MedHHIncTenThou, data=popInc)
+summary(collegePlus)
+
+```
+
+```{r echo = FALSE}
+ruralCollege <-lm(popCounty$Ed5CollegePlusPct ~ popCounty$RuralUrbanContinuumCode2013, data=popCounty)
+summary(ruralCollege)
+
+ruralIncCollege <- lm(popIncCounty$Ed5CollegePlusPct.x ~ popIncCounty$RuralUrbanContinuumCode2013 + popIncCounty$Median_HH_Inc_ACS, data=popIncCounty)
+summary(ruralIncCollege)
+
+```
+
+
+
+
+
+
+
