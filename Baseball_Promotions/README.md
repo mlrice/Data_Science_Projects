@@ -8,8 +8,11 @@ The purpose of this project was to make a recommendation for what day would be m
 The data provided included game attendance for the last year along with who the opponent was, date and day of the week, temperature, and if there was a promotion.  Using this information, I used a linear regression model to predict which variables had the most impact on attendance.  
 
 ### Variables Used
-attendance
-day of the week
-month
+attendance 
+day of the week 
+month 
 promotion
+
+### Language Used
+Python
 
