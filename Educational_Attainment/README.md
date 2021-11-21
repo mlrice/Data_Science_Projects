@@ -5,7 +5,8 @@
 Does income influence educational attainment? In this project, I look at data provided by the USDA and determine whether educational attainment can be predicted based on income.
 
 ### Methods used for analysis
-
+Graphical analysis 
+Linear Regression
 
 ### Variables Used
 Population
